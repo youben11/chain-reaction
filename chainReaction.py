@@ -1,4 +1,4 @@
-from chainReactionGUI import *
+from cr_gui import *
 
 if __name__ == '__main__':
     chainReaction()

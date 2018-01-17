@@ -1,5 +1,5 @@
 import pygame
-from algorithms import *
+from board import Board
 from sys import exit
 from random import randint
 from os import environ
@@ -26,7 +26,10 @@ MIN_ROW = 3
 MAX_COLUMN = 15
 MIN_COLUMN = 3
 
-def drawBoard(surface, board, n, m, player):
+def drawBoard(surface, gameBoard, player):
+    board = gameBoard.board
+    n = gameBoard.n
+    m = gameBoard.m
     surface.fill((0,0,0))
     width = surface.get_width() - PADD * 2
     height = surface.get_height() - PADD * 2
@@ -43,9 +46,12 @@ def drawBoard(surface, board, n, m, player):
     #draw cells
     for i in range(n):
         for j in range(m):
-            drawCell(surface, board, n, m, i, j)
+            drawCell(surface, gameBoard, i, j)
 
-def drawCell(surface, board, n, m, i, j):
+def drawCell(surface, gameBoard, i, j):
+    board = gameBoard.board
+    n = gameBoard.n
+    m = gameBoard.m
     cell = board[i][j]
     pawns = cell[1]
     if pawns == 0:
@@ -145,7 +151,10 @@ def initGame(surface):
 
     return (player, row, column)
 
-def gamePlay(surface, board, n, m, player):
+def gamePlay(surface, gameBoard, player):
+    board = gameBoard.board
+    n = gameBoard.n
+    m = gameBoard.m
     players = range(1,player + 1)
     p = 0
     winner = 0
@@ -167,22 +176,22 @@ def gamePlay(surface, board, n, m, player):
             pygame.quit()
             exit()
         player = players[p]
-        drawBoard(surface, board, n, m, player)
+        drawBoard(surface, gameBoard, player)
         #display the changes before blocking on select()
         pygame.display.flip()
         #select a cell
         if computer_mode and player == COMPUTER:
-            i, j = select_computer(board, n, m, COMPUTER)
+            i, j = select_computer(gameBoard, COMPUTER)
         else:
-            i, j = select(surface, board, n, m, player)
-        put(board, n, m, i, j, player)
+            i, j = select(surface, gameBoard, player)
+        gameBoard.put(i, j, player)
         #winners and loosers
         to_remove = []
         for player in players:
             if move_counter >= len(players):
-                if loose(board, n, m, player):
+                if gameBoard.loose(player):
                     to_remove.append(player)
-                elif win(board, n, m, player):
+                elif gameBoard.win(player):
                     winner = player
         if winner != 0:
             break
@@ -193,7 +202,7 @@ def gamePlay(surface, board, n, m, player):
         move_counter = move_counter + 1
 
     #The winneeer!
-    drawBoard(surface, board, n, m, winner)
+    drawBoard(surface, gameBoard, winner)
     font = pygame.font.Font("ressources/Lato-Black.ttf", m * 4)
     wins = font.render("Player %d wins !" % winner, True, COLOR[winner], (0,0,0))
     surface.blit(wins,((surface.get_width() - wins.get_width()) / 2,\
@@ -201,7 +210,10 @@ def gamePlay(surface, board, n, m, player):
     pygame.display.flip()
 
 
-def select(surface, board, n, m, nb):
+def select(surface, gameBoard, nb):
+    board = gameBoard.board
+    n = gameBoard.n
+    m = gameBoard.m
     width = (surface.get_width() - PADD * 2) / m
     height = (surface.get_height() - PADD * 2) / n
 
@@ -219,14 +231,17 @@ def select(surface, board, n, m, nb):
             y = event.pos[1]
             i = (y - PADD) / height
             j = (x - PADD) / width
-            if possible(board, n, m, i, j, nb):
+            if gameBoard.possible(i, j, nb):
                 return (i,j)
 
-def select_computer(board, n, m, player):
+def select_computer(gameBoard, player):
+    board = gameBoard.board
+    n = gameBoard.n
+    m = gameBoard.m
     pos = []
     for i in range(n):
         for j in range(m):
-            if possible(board, n, m, i, j, player):
+            if gameBoard.possible(i, j, player):
                 pos.append((i, j))
     rand = randint(0, len(pos) - 1)
     choice = pos[rand]
@@ -244,8 +259,8 @@ def chainReaction():
         player, row, column = initGame(screen)
         #screen for the rest of the game
         screen = pygame.display.set_mode((column * 50, row * 50))
-        board = newBoard(row, column)
-        gamePlay(screen, board, row, column, player)
+        board = Board(row, column)
+        gamePlay(screen, board, player)
         #play again or quit
         font = pygame.font.Font("ressources/Lato-Black.ttf", row * 3)
         again = font.render("Play again", True, (255,255,255), (0,0,0))
